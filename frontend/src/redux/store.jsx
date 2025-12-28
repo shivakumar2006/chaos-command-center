@@ -1,15 +1,12 @@
-import { configureStore, combinedReducers } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import { AuthApi } from "./api/jwtApi";
-
-const rootReducer = combinedReducers({
-    [AuthApi.reducerPath]: AuthApi.reducer,
-})
+import authReducer from "./api/authSlice";
 
 export const store = configureStore({
-    reducer: rootReducer,
+    reducer: {
+        [AuthApi.reducerPath]: AuthApi.reducer,
+        auth: authReducer,
+    },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({
-            serializableCheck: false,
-        })
-            .concat(AuthApi.middleware)
-})
+        getDefaultMiddleware().concat(AuthApi.middleware),
+});

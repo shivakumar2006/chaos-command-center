@@ -1,7 +1,40 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLoginMutation } from "../redux/api/jwtApi";
+import { useDispatch } from "react-redux";
+import { setUser } from "../redux/api/authSlice";
 
 export default function Login() {
     const navigate = useNavigate();
+
+    const dispatch = useDispatch();
+
+    const [login, { isLoading, isError }] = useLoginMutation();
+
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    })
+
+    const handleChange = (e) => {
+        const { name, value } = e.target
+
+        setFormData({
+            ...formData,
+            [name]: value,
+        })
+    }
+
+    const handleLogin = async () => {
+        try {
+            const response = await login(formData).unwrap();
+            dispatch(setUser(response));
+            navigate("/dashboard");
+            alert("Login succesfull");
+        } catch (error) {
+            console.error("Login failed : ", error)
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#F7F7F8] flex items-center justify-center px-6">
@@ -24,13 +57,20 @@ export default function Login() {
                     {/* INPUTS */}
                     <div className="space-y-5">
                         <input
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             className="w-full px-4 py-3 border placeholder:text-gray-500 text-gray-600 border-gray-300 rounded-lg
                          focus:ring-2 focus:ring-slate-900 outline-none"
-                            placeholder="Username"
+                            placeholder="Email"
                         />
 
                         <input
                             type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
                             className="w-full px-4 py-3 border placeholder:text-gray-500 text-gray-600 border-gray-300 rounded-lg
                          focus:ring-2 focus:ring-slate-900 outline-none"
                             placeholder="Password"
@@ -39,12 +79,13 @@ export default function Login() {
 
                     {/* ACTION */}
                     <button
-                        onClick={() => navigate("/dashboard")}
+                        onClick={handleLogin}
+                        disabled={isLoading}
                         className="mt-8 w-full py-3 rounded-lg
                        bg-slate-900 text-white
                        hover:bg-slate-800 transition"
                     >
-                        Login
+                        {isLoading ? "Signing in..." : "Login"}
                     </button>
 
                     {/* FOOTER */}

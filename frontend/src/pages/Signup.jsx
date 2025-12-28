@@ -1,7 +1,37 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useSignupMutation } from "../redux/api/jwtApi";
 
 export default function Signup() {
     const navigate = useNavigate();
+
+    const [signup, { isLoading, isError }] = useSignupMutation();
+
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+    })
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    };
+
+
+    const handleSignup = async () => {
+        try {
+            await signup(formData).unwrap();
+            navigate("/login");
+            alert("Signup succesfull");
+        } catch (error) {
+            console.error("Signup failed : ", error);
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#F7F7F8] flex items-center justify-center px-6">
@@ -24,6 +54,9 @@ export default function Signup() {
                     {/* INPUTS */}
                     <div className="space-y-5">
                         <input
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
                             className="w-full px-4 py-3 border placeholder:text-gray-500 text-gray-600 border-gray-300 rounded-lg
                          focus:ring-2 focus:ring-slate-900 outline-none"
                             placeholder="Full name"
@@ -31,6 +64,9 @@ export default function Signup() {
 
                         <input
                             type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             className="w-full px-4 py-3 border placeholder:text-gray-500 text-gray-600 border-gray-300 rounded-lg
                          focus:ring-2 focus:ring-slate-900 outline-none"
                             placeholder="Email address"
@@ -38,6 +74,9 @@ export default function Signup() {
 
                         <input
                             type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
                             className="w-full px-4 py-3 border placeholder:text-gray-500 text-gray-600 border-gray-300 rounded-lg
                          focus:ring-2 focus:ring-slate-900 outline-none"
                             placeholder="Password"
@@ -46,12 +85,12 @@ export default function Signup() {
 
                     {/* ACTION */}
                     <button
-                        onClick={() => navigate("/login")}
+                        onClick={handleSignup}
                         className="mt-8 w-full py-3 rounded-lg
                        bg-slate-900 text-white
                        hover:bg-slate-800 transition"
                     >
-                        Create account
+                        {isLoading ? "Creating..." : "Create account"}
                     </button>
 
                     {/* FOOTER */}

@@ -103,6 +103,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	var reqUser models.User
+
 	if err := json.NewDecoder(r.Body).Decode(&reqUser); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
@@ -112,14 +113,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	var user models.User
-	err := UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&user)
+	err := UserCollection.FindOne(ctx, bson.M{"email": reqUser.Email}).Decode(&user)
 	if err != nil {
-		http.Error(w, "User not found, invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "User not found or invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	// compare password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqUser.Password))
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(reqUser.Password),
+	)
 	if err != nil {
 		http.Error(w, "Email or password incorrect", http.StatusUnauthorized)
 		return
@@ -133,7 +137,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
-		http.Error(w, "could not generate token", http.StatusInternalServerError)
+		http.Error(w, "Could not generate token", http.StatusInternalServerError)
 		return
 	}
 
