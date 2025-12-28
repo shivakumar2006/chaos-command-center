@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"backend/auth/controllers"
+	"auth/controllers"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -9,5 +9,7 @@ import (
 func AuthRoutes(router chi.Router) {
 	router.Post("/signup", controllers.Signup)
 	router.Post("/login", controllers.Login)
-	router.Post("/verify", controllers.Verify)
+	router.Get("/verify", controllers.Verify)
+	router.Post("/forgot-password", controllers.ForgotPassword)
+	router.Post("/reset-password", controllers.ResetPassword)
 }
