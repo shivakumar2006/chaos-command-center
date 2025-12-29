@@ -36,6 +36,8 @@ export default function Login() {
         }
     }
 
+    console.log("login data: ", login);
+
     return (
         <div className="min-h-screen bg-[#F7F7F8] flex items-center justify-center px-6">
             <div className="w-full max-w-md">
