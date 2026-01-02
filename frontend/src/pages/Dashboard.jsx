@@ -10,6 +10,7 @@ import {
     Pie,
     Cell,
 } from "recharts";
+import { useMetricsQuery, usePaymentMutation, useProcessMutation, useChaosOffMutation, useChaosOnMutation } from "../redux/api/internal";
 
 /* ---------------- INITIAL DATA ---------------- */
 
@@ -51,11 +52,17 @@ export default function Dashboard() {
     const [lineData, setLineData] = useState(normalLineData);
     const [pieData, setPieData] = useState(normalPie);
 
+    const { data: metrics } = useMetricsQuery();
+    const [processReq] = useProcessMutation();
+    const [paymentReq] = usePaymentMutation();
+    const [chaosOn] = useChaosOnMutation();
+    const [chaosOff] = useChaosOffMutation();
+
     /* Live clock */
-    useEffect(() => {
-        const t = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(t);
-    }, []);
+    // useEffect(() => {
+    //     const t = setInterval(() => setTime(new Date()), 1000);
+    //     return () => clearInterval(t);
+    // }, []);
 
     /* CHAOS DATA SWITCH */
     useEffect(() => {
@@ -67,6 +74,33 @@ export default function Dashboard() {
             setPieData(normalPie);
         }
     }, [chaos]);
+
+    const toggleChaos = async () => {
+        if (!chaos) {
+            await chaosOn();
+            setChaos(true);
+        } else {
+            await chaosOff();
+            setChaos(false);
+        }
+    }
+
+    const fireLoad = async (type, count = 100) => {
+        const calls = [];
+
+        for (let i = 0; i < count; i++) {
+            if (type === "process") {
+                calls.push(processReq());
+            }
+            if (type === "payment") {
+                calls.push(paymentReq());
+            }
+        }
+
+        await Promise.all(calls);
+    }
+
+    console.log("metrics data", metrics);
 
     return (
         <div
@@ -90,12 +124,25 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <span className="text-xs text-gray-400">
-                        {time.toLocaleTimeString()}
-                    </span>
+                    <button
+                        onClick={() => fireLoad("process", 100)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded"
+                    >
+                        Hammer /process (100)
+                    </button>
 
                     <button
-                        onClick={() => setChaos(!chaos)}
+                        onClick={() => fireLoad("payment", 100)}
+                        className="px-4 py-2 bg-red-600 text-white rounded"
+                    >
+                        Hammer /payment (100)
+                    </button>
+                    {/* <span className="text-xs text-gray-400">
+                        {time.toLocaleTimeString()}
+                    </span> */}
+
+                    <button
+                        onClick={toggleChaos}
                         className={`px-6 py-2 rounded-lg font-medium transition ${chaos
                             ? "bg-green-600 text-white hover:bg-green-500"
                             : "bg-red-600 text-white hover:bg-red-500"
@@ -118,10 +165,23 @@ export default function Dashboard() {
 
                 {/* METRICS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Metric title="Requests / Sec" value={chaos ? "920" : "1680"} />
-                    <Metric title="Error Rate" value={chaos ? "46%" : "12%"} danger />
-                    <Metric title="System State" value={chaos ? "CRITICAL" : "NOMINAL"} />
+                    <Metric
+                        title="TOTAL REQUESTS"
+                        value={metrics?.total_requests ?? 0}
+                    />
+
+                    <Metric
+                        title="SUCCESS"
+                        value={metrics?.success ?? 0}
+                    />
+
+                    <Metric
+                        title="FAILURES"
+                        value={metrics?.failures ?? 0}
+                        danger
+                    />
                 </div>
+
 
                 {/* CHARTS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
